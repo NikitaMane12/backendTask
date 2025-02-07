@@ -1,46 +1,67 @@
 import { Link, useNavigate } from "react-router-dom";
 import "./login.css";
-import { useState } from "react";
+import { useState, FormEvent } from "react";
 import axios from "axios";
 import Swal from "sweetalert2";
 
+// Define types for response
+interface LoginResponse {
+  isError: boolean;
+  message: string;
+  token?: string;
+  user?: Record<string, unknown>;
+}
+
 const Login = () => {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [email, setEmail] = useState<string>("");
+  const [password, setPassword] = useState<string>("");
   const navigate = useNavigate();
 
-  const handlelogin = async (e) => {
+  const handleLogin = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+
     try {
-      const res = await axios.post("http://localhost:3001/users/login", {
-        email,
-        password,
-      });
+      const res = await axios.post<LoginResponse>(
+        "http://localhost:3001/users/login",
+        {
+          email,
+          password,
+        }
+      );
+
       const result = res.data;
       console.log("----result --", result);
+
       if (!result.isError) {
         Swal.fire({
           title: "Success!",
-          text: result.meassge,
+          text: result.message,
           icon: "success",
           confirmButtonText: "OK",
         });
-        localStorage.setItem("authtoken", result.token);
-        localStorage.setItem("user", JSON.stringify(result.user));
+
+        if (result.token) localStorage.setItem("authtoken", result.token);
+        if (result.user)
+          localStorage.setItem("user", JSON.stringify(result.user));
+
         navigate("/Taskform");
       } else {
         Swal.fire({
           title: "Error!",
-          text: result.meassge,
+          text: result.message,
           icon: "error",
           confirmButtonText: "Try Again",
         });
       }
     } catch (error) {
-      console.log("", error);
+      console.error("Login error:", error);
+
       Swal.fire({
         title: "Error!",
-        text: error.response?.data?.message || "Login failed",
+        text:
+          axios.isAxiosError(error) && error.response?.data?.message
+            ? error.response.data.message
+            : "Login failed",
         icon: "error",
         confirmButtonText: "Try Again",
       });
@@ -50,13 +71,14 @@ const Login = () => {
   return (
     <div className="login-container">
       <h2 className="login-title">Login</h2>
-      <form onSubmit={handlelogin}>
+      <form onSubmit={handleLogin}>
         <label className="login-label">Email</label>
         <input
           type="email"
           className="login-input"
           placeholder="Enter your email"
           required
+          value={email}
           onChange={(e) => setEmail(e.target.value)}
         />
 
@@ -66,6 +88,7 @@ const Login = () => {
           className="login-input"
           placeholder="Enter your password"
           required
+          value={password}
           onChange={(e) => setPassword(e.target.value)}
         />
 

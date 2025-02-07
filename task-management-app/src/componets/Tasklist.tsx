@@ -12,21 +12,8 @@ interface ITask {
   status: "pending" | "in-progress" | "completed";
 }
 
-interface INewTask {
-  title: string;
-  description: string;
-  priority: "low" | "medium" | "high";
-  status: "pending" | "in-progress" | "completed";
-}
-
 const TaskList = () => {
   const [tasks, setTasks] = useState<ITask[]>([]);
-  const [newTask, setNewTask] = useState<INewTask>({
-    title: "",
-    description: "",
-    priority: "low",
-    status: "pending",
-  });
   const [editingTask, setEditingTask] = useState<ITask | null>(null);
 
   const fetchTasks = async () => {
